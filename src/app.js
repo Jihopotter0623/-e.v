@@ -1,4 +1,5 @@
 import { createSpiderLogoGeometry } from './spiderLogo.js';
+import { initSoccerStandings, getQuickStandingsSummary } from './soccerStandings.js';
 
 (function(){
   const $ = (id) => document.getElementById(id);
@@ -165,7 +166,10 @@ SPEECH & SUBTITLE PROTOCOL (CRITICAL REQUIREMENT):
 EN: <your natural, quick-witted English spoken response>
 KO: <natural Korean subtitle translation of the English response>
 
-Output ONLY those two lines. No markdown quotes, no other labels or commentary.`;
+Output ONLY those two lines. No markdown quotes, no other labels or commentary.
+
+SOCCER HUD PROTOCOL:
+You have real-time access to the 6 major football leagues synchronized on the left HUD panel: Premier League (EPL), LALIGA, Bundesliga, Serie A, Ligue 1, and K League 1 (K리그). If the user asks about rankings, leaders, or clubs, give a quick friendly briefing and let them know the left panel is synchronized live with full team details.`;
 
   function systemPromptWithName(){
     const nameKO = savedName || '사령관';
@@ -1630,6 +1634,7 @@ Output ONLY those two lines. No markdown quotes, no other labels or commentary.`
   window.addEventListener('load', ()=>{
     initCore3D();
     initSpiderHologram3D();
+    initSoccerStandings();
     tickHoloClock();
     setInterval(tickHoloClock, 1000);
     setTimeout(async ()=>{

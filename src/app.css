@@ -762,3 +762,508 @@ html,body{
   #hudReadouts{gap:12px;}
   .brand{font-size:28px;}
 }
+
+/* =========================================================
+   REAL-TIME SOCCER STANDINGS HUD (LEFT PANEL)
+   ========================================================= */
+#leftLeaguePanel{
+  position:absolute;
+  left:clamp(14px, 2.2vw, 36px);
+  top:50%;
+  transform:translateY(-50%);
+  width:clamp(310px, 24vw, 370px);
+  height:calc(100vh - 360px);
+  min-height:340px;
+  max-height:520px;
+  z-index:5;
+  display:flex;
+  flex-direction:column;
+  background:rgba(4, 13, 23, 0.90);
+  backdrop-filter:blur(10px);
+  border:1px solid rgba(63, 227, 255, 0.3);
+  border-radius:4px;
+  box-shadow:0 0 25px rgba(63, 227, 255, 0.12), 0 10px 40px rgba(0,0,0,0.65);
+  overflow:hidden;
+  transition:transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease;
+  user-select:none;
+}
+#leftLeaguePanel::before{
+  content:'';
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  z-index:0;
+  border-radius:4px;
+  background-image:repeating-linear-gradient(
+    to bottom, rgba(200,245,255,0.04) 0px, rgba(200,245,255,0.04) 1px, transparent 2px, transparent 4px
+  );
+  mix-blend-mode:overlay;
+}
+#leftLeaguePanel > *{
+  position:relative;
+  z-index:1;
+}
+
+#leftLeaguePanel.collapsed{
+  transform:translateY(-50%) translateX(calc(-100% - 40px));
+  opacity:0;
+  pointer-events:none;
+}
+
+/* Re-open tab when collapsed */
+#leagueExpandTab{
+  position:absolute;
+  left:12px;
+  top:50%;
+  transform:translateY(-50%);
+  z-index:5;
+  background:rgba(4, 14, 26, 0.94);
+  border:1px solid var(--red);
+  border-left:none;
+  border-radius:0 4px 4px 0;
+  color:var(--red);
+  padding:10px 12px;
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  gap:6px;
+  font-family:'Rajdhani', sans-serif;
+  font-size:13px;
+  font-weight:700;
+  letter-spacing:1px;
+  box-shadow:0 0 16px var(--glow-red);
+  transition:all 0.2s ease;
+}
+#leagueExpandTab[hidden]{
+  display:none;
+}
+#leagueExpandTab:hover{
+  background:var(--red);
+  color:var(--ink);
+  box-shadow:0 0 24px var(--glow-red);
+}
+#leagueExpandTab .expand-arrow{
+  font-size:11px;
+  transition:transform 0.2s ease;
+}
+#leagueExpandTab:hover .expand-arrow{
+  transform:translateX(2px);
+}
+
+/* Header */
+.league-panel-header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:10px 14px 8px;
+  border-bottom:1px solid var(--panel-border);
+  background:rgba(0,0,0,0.3);
+}
+.league-badge-tag{
+  font-family:'Share Tech Mono', monospace;
+  font-size:8.5px;
+  letter-spacing:1.8px;
+  color:var(--gold);
+  opacity:0.85;
+}
+.league-main-title{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  margin-top:2px;
+}
+.league-main-title .league-icon{
+  font-size:15px;
+  filter:drop-shadow(0 0 4px var(--glow-red));
+}
+.league-title-text{
+  font-size:14px;
+  font-weight:700;
+  letter-spacing:1.5px;
+  color:var(--red);
+  text-shadow:0 0 8px var(--glow-red);
+  text-transform:uppercase;
+}
+.league-header-actions{
+  display:flex;
+  align-items:center;
+  gap:5px;
+}
+.league-action-btn{
+  width:26px;
+  height:26px;
+  padding:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border:1px solid var(--panel-border);
+  border-radius:3px;
+  background:rgba(63,227,255,0.06);
+  color:var(--text-dim);
+  font-size:11px;
+  cursor:pointer;
+  transition:all 0.15s ease;
+}
+.league-action-btn:hover{
+  border-color:var(--red);
+  color:var(--red);
+  background:rgba(63,227,255,0.15);
+  box-shadow:0 0 8px var(--glow-red);
+}
+.refresh-icon.spinning{
+  animation:refreshSpin 0.7s linear infinite;
+}
+@keyframes refreshSpin{
+  from{transform:rotate(0deg);}
+  to{transform:rotate(360deg);}
+}
+
+/* Tabs */
+.league-tabs{
+  display:grid;
+  grid-template-columns:repeat(6, 1fr);
+  gap:3px;
+  padding:6px 10px;
+  background:rgba(2, 8, 14, 0.6);
+  border-bottom:1px solid rgba(63, 227, 255, 0.16);
+}
+.league-tab{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:2px;
+  padding:5px 2px;
+  background:rgba(255,255,255,0.02);
+  border:1px solid rgba(63,227,255,0.14);
+  border-radius:3px;
+  color:var(--text-dim);
+  font-family:'Rajdhani', sans-serif;
+  cursor:pointer;
+  transition:all 0.18s ease;
+}
+.league-tab .tab-flag{
+  font-size:12px;
+  line-height:1;
+}
+.league-tab .tab-label{
+  font-size:10px;
+  font-weight:700;
+  letter-spacing:0.5px;
+  white-space:nowrap;
+}
+.league-tab:hover{
+  background:rgba(63,227,255,0.09);
+  border-color:var(--blue-light);
+  color:var(--text-main);
+}
+.league-tab.active{
+  background:rgba(63,227,255,0.22);
+  border-color:var(--red);
+  color:#fff;
+  box-shadow:0 0 10px rgba(63,227,255,0.35);
+  text-shadow:0 0 6px var(--red);
+}
+
+/* Sub-header Meta */
+.league-meta-bar{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:6px 12px;
+  background:rgba(0,0,0,0.22);
+  border-bottom:1px solid rgba(63, 227, 255, 0.1);
+  font-size:11px;
+}
+.league-meta-title{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  font-weight:700;
+  color:var(--gold);
+  letter-spacing:0.8px;
+  overflow:hidden;
+  white-space:nowrap;
+  text-overflow:ellipsis;
+}
+.league-current-flag{
+  font-size:13px;
+}
+.league-current-name{
+  font-size:11.5px;
+  color:var(--gold);
+}
+.league-sync-status{
+  display:flex;
+  align-items:center;
+  gap:4px;
+  font-family:'Share Tech Mono', monospace;
+  font-size:9.5px;
+  letter-spacing:1px;
+  color:var(--text-dim);
+  flex-shrink:0;
+}
+.sync-dot{
+  width:6px;
+  height:6px;
+  border-radius:50%;
+  background:#2bd980;
+  box-shadow:0 0 6px #2bd980;
+}
+.sync-dot.live{
+  animation:statusBlink 1.8s infinite;
+}
+
+/* Search input */
+.league-search-wrap{
+  position:relative;
+  padding:6px 10px;
+  border-bottom:1px solid rgba(63, 227, 255, 0.1);
+  background:rgba(0,0,0,0.15);
+}
+.league-search-input{
+  width:100%;
+  background:rgba(0,0,0,0.35);
+  border:1px solid rgba(63,227,255,0.18);
+  border-radius:3px;
+  color:var(--text-main);
+  padding:5px 28px 5px 9px;
+  font-family:'Rajdhani', sans-serif;
+  font-size:11.5px;
+  font-weight:500;
+  outline:none;
+  transition:all 0.15s ease;
+}
+.league-search-input:focus{
+  border-color:var(--red);
+  box-shadow:0 0 8px var(--glow-red) inset;
+}
+.league-search-input::placeholder{
+  color:var(--text-dim);
+  opacity:0.75;
+}
+.league-search-clear{
+  position:absolute;
+  right:16px;
+  top:50%;
+  transform:translateY(-50%);
+  background:none;
+  border:none;
+  color:var(--text-dim);
+  font-size:11px;
+  cursor:pointer;
+  padding:2px;
+}
+.league-search-clear:hover{
+  color:var(--red);
+}
+
+/* Standings Table Wrap */
+.league-table-wrap{
+  flex:1;
+  overflow-y:auto;
+  position:relative;
+  min-height:180px;
+}
+.league-table-wrap::-webkit-scrollbar{
+  width:5px;
+}
+.league-table-wrap::-webkit-scrollbar-thumb{
+  background:var(--red-dark);
+  border-radius:2px;
+}
+.league-table-wrap::-webkit-scrollbar-track{
+  background:rgba(0,0,0,0.2);
+}
+
+.league-table{
+  width:100%;
+  border-collapse:collapse;
+  font-size:11px;
+  table-layout:fixed;
+}
+.league-table thead th{
+  position:sticky;
+  top:0;
+  z-index:2;
+  background:rgba(4, 14, 25, 0.96);
+  backdrop-filter:blur(4px);
+  padding:6px 3px;
+  font-size:9.5px;
+  font-weight:700;
+  letter-spacing:1px;
+  color:var(--text-dim);
+  text-align:center;
+  border-bottom:1px solid var(--panel-border);
+  text-transform:uppercase;
+}
+.league-table th.th-rank{width:26px;}
+.league-table th.th-team{text-align:left;padding-left:8px;}
+.league-table th.th-stat{width:24px;}
+.league-table th.th-pts{width:30px;color:var(--gold);}
+
+.league-table tbody tr{
+  border-bottom:1px solid rgba(63, 227, 255, 0.07);
+  transition:background 0.12s ease;
+}
+.league-table tbody tr:hover{
+  background:rgba(63, 227, 255, 0.12);
+}
+
+.league-table td{
+  padding:4px 3px;
+  vertical-align:middle;
+}
+.league-table td.td-rank{
+  text-align:center;
+  font-family:'Share Tech Mono', monospace;
+  font-weight:700;
+  font-size:11px;
+}
+.league-table tr.rank-1 .td-rank{
+  color:#ffde59;
+  text-shadow:0 0 6px rgba(255,222,89,0.7);
+}
+.league-table tr.rank-ucl .td-rank{
+  color:var(--blue-light);
+}
+.league-table tr.rank-rel .td-rank{
+  color:#ff6378;
+}
+
+.league-table td.td-team{
+  text-align:left;
+  padding-left:6px;
+  overflow:hidden;
+}
+.team-cell-wrap{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  overflow:hidden;
+}
+.team-emblem{
+  width:18px;
+  height:18px;
+  object-fit:contain;
+  flex-shrink:0;
+  filter:drop-shadow(0 0 2px rgba(0,0,0,0.8));
+}
+.team-names-box{
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+  line-height:1.2;
+}
+.team-name-ko{
+  font-size:11.5px;
+  font-weight:600;
+  color:var(--text-main);
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.team-name-en{
+  font-size:9px;
+  color:var(--text-dim);
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  opacity:0.85;
+}
+
+.league-table td.td-stat{
+  text-align:center;
+  font-family:'Share Tech Mono', monospace;
+  font-size:10px;
+  color:var(--text-dim);
+}
+.league-table td.td-gd{
+  text-align:center;
+  font-family:'Share Tech Mono', monospace;
+  font-size:10px;
+}
+.td-gd.positive{color:#5effb1;}
+.td-gd.negative{color:#ff7a8a;}
+.td-gd.zero{color:var(--text-dim);}
+
+.league-table td.td-pts{
+  text-align:center;
+  font-family:'Share Tech Mono', monospace;
+  font-size:11.5px;
+  font-weight:700;
+  color:var(--gold);
+  text-shadow:0 0 5px rgba(214,249,255,0.45);
+}
+
+.league-table-empty{
+  padding:30px 16px;
+  text-align:center;
+  color:var(--text-dim);
+  font-size:12px;
+}
+
+/* Footer */
+.league-panel-footer{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:6px 12px;
+  border-top:1px solid var(--panel-border);
+  background:rgba(0,0,0,0.3);
+  font-size:9.5px;
+  color:var(--text-dim);
+}
+.league-legend{
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+.legend-item{
+  display:inline-flex;
+  align-items:center;
+  gap:4px;
+}
+.legend-dot{
+  width:5px;
+  height:5px;
+  border-radius:50%;
+}
+.legend-item.ucl .legend-dot{
+  background:var(--blue-light);
+  box-shadow:0 0 4px var(--blue-light);
+}
+.legend-item.rel .legend-dot{
+  background:#ff4d67;
+  box-shadow:0 0 4px #ff4d67;
+}
+.league-updated-time{
+  font-family:'Share Tech Mono', monospace;
+  font-size:9px;
+  opacity:0.85;
+}
+
+/* Responsive / Mobile Drawer */
+@media (max-width:1024px){
+  #leftLeaguePanel{
+    position:fixed;
+    left:0;
+    top:0;
+    bottom:0;
+    width:min(350px, 86vw);
+    height:100vh;
+    max-height:100vh;
+    border-radius:0;
+    z-index:35;
+    transform:translateX(-100%);
+    box-shadow:none;
+  }
+  #leftLeaguePanel.mobile-open{
+    transform:translateX(0);
+    box-shadow:0 0 50px rgba(0,0,0,0.85), 0 0 30px var(--glow-red);
+  }
+  #leagueExpandTab{
+    display:none !important;
+  }
+}
+

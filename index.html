@@ -4,9 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>AI E.V</title>
-  <meta name="description" content="Your friendly neighborhood AI assistant with a smooth 3D holographic core, 3D holographic Spider-Man logo, voice interaction, and Gemini integration.">
+  <meta name="description" content="Your friendly neighborhood AI assistant featuring real-time soccer standings (PL, LaLiga, Bundesliga, Serie A, Ligue 1, K League), 3D holographic core, 3D Spider-Man hologram, and Gemini integration.">
   <meta property="og:title" content="AI E.V">
-  <meta property="og:description" content="Your friendly neighborhood AI assistant with a smooth 3D holographic core, 3D holographic Spider-Man logo, voice interaction, and Gemini integration.">
+  <meta property="og:description" content="Your friendly neighborhood AI assistant featuring real-time soccer standings (PL, LaLiga, Bundesliga, Serie A, Ligue 1, K League), 3D holographic core, 3D Spider-Man hologram, and Gemini integration.">
   <meta property="og:type" content="website">
   <meta name="twitter:card" content="summary_large_image">
 
@@ -42,7 +42,8 @@
       <span id="userTag" style="display:none;"></span>
       <button class="ghost-btn" id="modeBtn2" title="Toggle bio-alert overlay">SENSE</button>
       <button class="ghost-btn" id="baseballBtn" title="야구 시뮬레이션">⚾</button>
-      <button class="ghost-btn" id="soccerBtn" title="축구 기술 백과사전">⚽</button>
+      <button class="ghost-btn" id="soccerBtn" title="축구 기술 백과사전">⚽ 기술</button>
+      <button class="ghost-btn" id="leagueToggleBtn" title="실시간 6대 축구 리그 순위 (EPL·라리가·분데스·세리에·리그1·K리그)">🏆 순위표</button>
       <button class="ghost-btn" id="timeBtn" title="퀀텀 타임 트래블 시뮬레이터">🕰️</button>
       <button class="ghost-btn" id="valorantBtn" title="발로란트 실행 (최초 1회 프로토콜 설정 필요 — 함께 받은 install-jarvis-protocol.bat 참고)">🎮 VALORANT</button>
       <button class="ghost-btn" id="settingsBtn" title="AI provider settings">⚙</button>
@@ -183,8 +184,115 @@
     </div>
   </div>
 
-  <!-- APP VIEW: 3D Holographic Core & 3D Spider-Man Hologram -->
+  <!-- APP VIEW: Left League Panel + 3D Holographic Core + 3D Spider-Man Hologram -->
   <div id="appView">
+    <!-- LEFT PANEL: 실시간 축구 리그 순위표 -->
+    <div id="leftLeaguePanel" class="league-panel" aria-label="실시간 축구 리그 순위">
+      <div class="league-panel-header">
+        <div class="league-title-wrap">
+          <div class="league-badge-tag">HUD // LIVE SPORTS</div>
+          <div class="league-main-title">
+            <span class="league-icon">⚽</span>
+            <span class="league-title-text">실시간 리그 순위</span>
+          </div>
+        </div>
+        <div class="league-header-actions">
+          <button class="ghost-btn league-action-btn" id="leagueRefreshBtn" title="실시간 순위 새로고침">
+            <span class="refresh-icon" id="leagueRefreshIcon">🔄</span>
+          </button>
+          <button class="ghost-btn league-action-btn" id="leagueCollapseBtn" title="패널 접기">
+            <span id="leagueCollapseIcon">◀</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- 6 League Tabs -->
+      <div class="league-tabs" id="leagueTabs" role="tablist">
+        <button class="league-tab active" data-league="epl" title="잉글랜드 프리미어리그" role="tab">
+          <span class="tab-flag">🏴󠁧󠁢󠁥󠁮󠁧󠁿</span>
+          <span class="tab-label">EPL</span>
+        </button>
+        <button class="league-tab" data-league="laliga" title="스페인 라리가" role="tab">
+          <span class="tab-flag">🇪🇸</span>
+          <span class="tab-label">라리가</span>
+        </button>
+        <button class="league-tab" data-league="bundesliga" title="독일 분데스리가" role="tab">
+          <span class="tab-flag">🇩🇪</span>
+          <span class="tab-label">분데스</span>
+        </button>
+        <button class="league-tab" data-league="seriea" title="이탈리아 세리에 A" role="tab">
+          <span class="tab-flag">🇮🇹</span>
+          <span class="tab-label">세리에</span>
+        </button>
+        <button class="league-tab" data-league="ligue1" title="프랑스 리그 1" role="tab">
+          <span class="tab-flag">🇫🇷</span>
+          <span class="tab-label">리그 1</span>
+        </button>
+        <button class="league-tab" data-league="kleague" title="대한민국 K리그 1" role="tab">
+          <span class="tab-flag">🇰🇷</span>
+          <span class="tab-label">K리그</span>
+        </button>
+      </div>
+
+      <!-- Active League Sub-header & Status -->
+      <div class="league-meta-bar">
+        <div class="league-meta-title" id="leagueMetaTitle">
+          <span class="league-current-flag" id="leagueCurrentFlag">🏴󠁧󠁢󠁥󠁮󠁧󠁿</span>
+          <span class="league-current-name" id="leagueCurrentName">프리미어리그 (Premier League)</span>
+        </div>
+        <div class="league-sync-status">
+          <span class="sync-dot live" id="leagueSyncDot"></span>
+          <span id="leagueSyncText">LIVE</span>
+        </div>
+      </div>
+
+      <!-- Search / Quick Filter Input -->
+      <div class="league-search-wrap">
+        <input type="text" id="leagueSearchInput" class="league-search-input" placeholder="팀 검색 (예: 맨시티, 토트넘, 서울)...">
+        <button id="leagueSearchClearBtn" class="league-search-clear" title="검색어 초기화" hidden>✕</button>
+      </div>
+
+      <!-- Standings Table Container -->
+      <div class="league-table-wrap" id="leagueTableWrap">
+        <table class="league-table" id="leagueTable">
+          <thead>
+            <tr>
+              <th class="th-rank">#</th>
+              <th class="th-team">팀</th>
+              <th class="th-stat" title="경기 수">경기</th>
+              <th class="th-stat" title="승">승</th>
+              <th class="th-stat" title="무">무</th>
+              <th class="th-stat" title="패">패</th>
+              <th class="th-stat" title="골득실">득실</th>
+              <th class="th-pts" title="승점">승점</th>
+            </tr>
+          </thead>
+          <tbody id="leagueTableBody">
+            <!-- Table rows rendered dynamically -->
+          </tbody>
+        </table>
+        <div id="leagueTableEmpty" class="league-table-empty" hidden>
+          <span>검색된 팀이 없습니다.</span>
+        </div>
+      </div>
+
+      <!-- Panel Footer with Legend & Timestamp -->
+      <div class="league-panel-footer">
+        <div class="league-legend">
+          <span class="legend-item ucl"><span class="legend-dot"></span>UCL/ACL권 (1~4위)</span>
+          <span class="legend-item rel"><span class="legend-dot"></span>강등권</span>
+        </div>
+        <div class="league-updated-time" id="leagueUpdatedTime">동기화 완료</div>
+      </div>
+    </div>
+
+    <!-- Quick Tab to Re-open when collapsed -->
+    <button id="leagueExpandTab" class="league-expand-tab" title="축구 리그 순위표 열기" hidden>
+      <span class="expand-icon">🏆</span>
+      <span class="expand-text">순위표</span>
+      <span class="expand-arrow">▶</span>
+    </button>
+
     <div id="orbPane" title="E.V 3D 홀로그래픽 코어">
       <div class="core">
         <div class="core-backdrop"></div>

@@ -68,6 +68,120 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+interface FootballCache {
+  data: any[];
+  timestamp: number;
+}
+const footballCache: Record<string, FootballCache> = {};
+const CACHE_TTL_MS = 60 * 1000;
+
+const ESPN_LEAGUES: Record<string, string> = {
+  epl: 'eng.1',
+  premierleague: 'eng.1',
+  laliga: 'esp.1',
+  bundesliga: 'ger.1',
+  seriea: 'ita.1',
+  ligue1: 'fra.1',
+};
+
+async function fetchLeagueFromSource(leagueKey: string) {
+  const normKey = leagueKey.toLowerCase();
+
+  if (normKey === 'kleague' || normKey === 'k-league') {
+    const url = 'https://api-gw.sports.naver.com/statistics/categories/kleague/seasons/2026/teams';
+    const response = await fetch(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko)',
+      },
+    });
+    if (!response.ok) {
+      throw new Error(`K-League source returned HTTP ${response.status}`);
+    }
+    const json = await response.json();
+    const stats = json.result?.seasonTeamStats || [];
+    return stats.map((t: any) => ({
+      rank: t.rank,
+      teamId: String(t.teamId || ''),
+      teamName: t.teamName || '',
+      teamShortName: t.teamShortName || t.teamName || '',
+      logo: t.teamEmblemUrl || `https://sports-phinf.pstatic.net/team/kleague/default/${t.teamId}.png?type=f92_88`,
+      played: t.matchesPlayed ?? 0,
+      won: t.wins ?? 0,
+      drawn: t.draws ?? 0,
+      lost: t.losses ?? 0,
+      goalsFor: t.goals ?? 0,
+      goalsAgainst: t.goalsConceded ?? 0,
+      goalDiff: t.goalsDifference ?? 0,
+      points: t.points ?? 0,
+      form: t.lastFiveGames || '',
+    }));
+  }
+
+  const espnCode = ESPN_LEAGUES[normKey] || 'eng.1';
+  const url = `https://site.api.espn.com/apis/v2/sports/soccer/${espnCode}/standings`;
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`ESPN returned HTTP ${response.status}`);
+  }
+  const json = await response.json();
+  const entries = json.children?.[0]?.standings?.entries || [];
+  return entries.map((entry: any) => {
+    const getStat = (name: string) => entry.stats?.find((s: any) => s.name === name)?.value ?? 0;
+    return {
+      rank: getStat('rank'),
+      teamId: String(entry.team?.id || ''),
+      teamName: entry.team?.displayName || entry.team?.name || '',
+      teamShortName: entry.team?.shortDisplayName || entry.team?.abbreviation || '',
+      logo: entry.team?.logos?.[0]?.href || '',
+      played: getStat('gamesPlayed'),
+      won: getStat('wins'),
+      drawn: getStat('ties'),
+      lost: getStat('losses'),
+      goalsFor: getStat('pointsFor'),
+      goalsAgainst: getStat('pointsAgainst'),
+      goalDiff: getStat('pointDifferential'),
+      points: getStat('points'),
+    };
+  });
+}
+
+app.get('/api/football/standings', async (req, res) => {
+  const league = (req.query.league as string) || 'epl';
+  const normLeague = league.toLowerCase();
+
+  const now = Date.now();
+  if (footballCache[normLeague] && now - footballCache[normLeague].timestamp < CACHE_TTL_MS) {
+    return res.json({
+      league: normLeague,
+      cached: true,
+      standings: footballCache[normLeague].data,
+    });
+  }
+
+  try {
+    const standings = await fetchLeagueFromSource(normLeague);
+    footballCache[normLeague] = { data: standings, timestamp: now };
+    return res.json({
+      league: normLeague,
+      cached: false,
+      standings,
+    });
+  } catch (err: any) {
+    console.warn(`Failed to fetch fresh football standings for ${normLeague}:`, err.message);
+    if (footballCache[normLeague]) {
+      return res.json({
+        league: normLeague,
+        stale: true,
+        standings: footballCache[normLeague].data,
+      });
+    }
+    return res.status(500).json({
+      error: err.message,
+      league: normLeague,
+    });
+  }
+});
+
 app.post('/api/chat', async (req, res) => {
   const { messages, model = 'gemini-3.8-flash', stream = true, apiKey: clientApiKey } = req.body;
 
