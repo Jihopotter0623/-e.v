@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI E.V</title>
+  <meta name="description" content="Your friendly neighborhood AI assistant with a smooth 3D holographic core, 3D holographic Spider-Man logo, voice interaction, and Gemini integration.">
+  <meta property="og:title" content="AI E.V">
+  <meta property="og:description" content="Your friendly neighborhood AI assistant with a smooth 3D holographic core, 3D holographic Spider-Man logo, voice interaction, and Gemini integration.">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary_large_image">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+  <link rel="stylesheet" href="/src/app.css">
+</head>
+<body>
+<div id="stage">
+  <div id="halftone"></div>
+  <div class="bio-pulse tl"></div>
+  <div class="bio-pulse tl d2"></div>
+  <div class="bio-pulse tr"></div>
+  <div class="bio-pulse tr d2"></div>
+  <div id="scan"></div>
+  <div id="scanlines"></div>
+  <div id="vignette"></div>
+
+  <div id="topbar">
+    <div class="brand">
+      <span class="ai-badge">A.I.</span>
+      <div class="brand-text">
+        <span class="wordmark">E.V</span>
+        <small>Your&nbsp;friendly&nbsp;neighborhood&nbsp;AI&nbsp;&middot;&nbsp;A&nbsp;Brand&nbsp;New&nbsp;Day</small>
+      </div>
+    </div>
+    <div id="userControls">
+      <div id="statusPill"><span id="statusDot"></span><span id="statusText">STANDBY</span></div>
+      <span id="userTag" style="display:none;"></span>
+      <button class="ghost-btn" id="modeBtn2" title="Toggle bio-alert overlay">SENSE</button>
+      <button class="ghost-btn" id="baseballBtn" title="야구 시뮬레이션">⚾</button>
+      <button class="ghost-btn" id="soccerBtn" title="축구 기술 백과사전">⚽</button>
+      <button class="ghost-btn" id="timeBtn" title="퀀텀 타임 트래블 시뮬레이터">🕰️</button>
+      <button class="ghost-btn" id="valorantBtn" title="발로란트 실행 (최초 1회 프로토콜 설정 필요 — 함께 받은 install-jarvis-protocol.bat 참고)">🎮 VALORANT</button>
+      <button class="ghost-btn" id="settingsBtn" title="AI provider settings">⚙</button>
+      <button class="ghost-btn" id="signOutBtn" style="display:none;">SIGN OUT</button>
+    </div>
+  </div>
+
+  <div id="settingsPanel" hidden>
+    <div class="settings-title">Preferences</div>
+    <label class="settings-field">
+      <span>Your Name</span>
+      <input id="nameInput" type="text" placeholder="사령관">
+    </label>
+    <label class="settings-field">
+      <span>Voice (English/Korean TTS)</span>
+      <div class="settings-field-row">
+        <select id="voiceSelect"></select>
+        <button class="ghost-btn" id="voiceTestBtn" title="Preview this voice">▶</button>
+      </div>
+    </label>
+    <div class="settings-actions">
+      <button class="ghost-btn" id="savePrefsBtn">Save</button>
+    </div>
+    <div id="prefsMsg" class="settings-msg"></div>
+
+    <hr class="settings-divider">
+
+    <div class="settings-title">AI Engine</div>
+    <div class="settings-row">Current: <b id="providerStatus" class="mono">GEMINI CORE</b></div>
+    <label class="settings-field">
+      <span>Model</span>
+      <input id="geminiModelInput" type="text" value="gemini-3.8-flash">
+    </label>
+    <label class="settings-field">
+      <span>Custom Gemini API Key (선택사항)</span>
+      <input id="geminiKeyInput" type="password" placeholder="기본 서버 키 자동 사용 중">
+    </label>
+    <div class="settings-actions">
+      <button class="ghost-btn" id="geminiConnectBtn">Apply Model / Key</button>
+      <button class="ghost-btn" id="geminiClearBtn">Reset to Default</button>
+    </div>
+    <div id="settingsMsg" class="settings-msg"></div>
+    <div class="settings-note">
+      기본적으로 서버에 설정된 Google Gemini 코어가 즉시 동작합니다. 원하실 경우 별도의 API 키 및 모델을 지정할 수 있습니다.
+    </div>
+  </div>
+
+  <!-- BASEBALL SIMULATION -->
+  <div id="baseballOverlay" hidden>
+    <div id="baseballPanel">
+      <div class="bb-header">
+        <span class="bb-title">⚾ E.V BASEBALL SIM</span>
+        <button class="ghost-btn" id="bbCloseBtn">✕</button>
+      </div>
+
+      <div id="bbSetup">
+        <label class="settings-field">
+          <span>원정팀 (Away)</span>
+          <input id="bbAwayName" type="text" placeholder="AWAY" maxlength="16">
+        </label>
+        <label class="settings-field">
+          <span>홈팀 (Home)</span>
+          <input id="bbHomeName" type="text" placeholder="HOME" maxlength="16">
+        </label>
+        <label class="settings-field">
+          <span>이닝 수</span>
+          <select id="bbInnings">
+            <option value="3">3이닝 (연습경기)</option>
+            <option value="6">6이닝</option>
+            <option value="9" selected>9이닝 (정식경기)</option>
+          </select>
+        </label>
+        <div class="settings-actions">
+          <button class="ghost-btn" id="bbStartBtn">경기 시작 ▶</button>
+        </div>
+      </div>
+
+      <div id="bbGame" hidden>
+        <div id="bbScoreboard" class="mono">
+          <div class="bb-team-row"><span id="bbAwayLabel">AWAY</span><span id="bbAwayScore">0</span></div>
+          <div class="bb-team-row"><span id="bbHomeLabel">HOME</span><span id="bbHomeScore">0</span></div>
+          <div id="bbInningInfo">1회초 · OUT 0</div>
+        </div>
+
+        <div id="bbDiamond">
+          <div class="bb-base" id="bbBase2"></div>
+          <div class="bb-base" id="bbBase3"></div>
+          <div class="bb-base" id="bbBase1"></div>
+          <div class="bb-home">HOME</div>
+        </div>
+
+        <div id="bbLog"></div>
+
+        <div class="settings-actions">
+          <button class="ghost-btn" id="bbPitchBtn">타석 진행 ▶</button>
+          <button class="ghost-btn" id="bbResetBtn">새 경기</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SOCCER SKILL ENCYCLOPEDIA -->
+  <div class="modal-overlay" id="soccerOverlay" hidden>
+    <div class="modal-panel" id="soccerPanel">
+      <div class="modal-header">
+        <span class="modal-title">⚽ 축구 기술 백과사전</span>
+        <button class="ghost-btn modal-close-btn" id="soccerCloseBtn">✕</button>
+      </div>
+      <input id="soccerSearch" type="text" placeholder="기술 이름으로 검색... (예: 엘라스티코)">
+      <div id="soccerTabs"></div>
+      <div id="soccerList"></div>
+    </div>
+  </div>
+
+  <!-- QUANTUM REALITY SIMULATOR -->
+  <div class="modal-overlay" id="timeOverlay" hidden>
+    <div class="modal-panel" id="timePanel">
+      <div class="modal-header">
+        <span class="modal-title">🕰️ 퀀텀 리얼리티 시뮬레이터</span>
+        <button class="ghost-btn modal-close-btn" id="timeCloseBtn">✕</button>
+      </div>
+      <div id="timeControls">
+        <textarea id="timeYearInput" rows="2" maxlength="200" placeholder="무엇을 시뮬레이션 하고 싶으신가요? 시간여행 시나리오든, 특정 물건이든, 그 밖의 무엇이든 자유롭게 적어보세요. (예: 2012년 뉴욕 전투 시점으로 돌아가기, 탄소나노튜브로 만든 우주 엘리베이터, 손흥민이 결승골을 넣는 순간 등)"></textarea>
+        <div id="timeInputError"></div>
+        <button class="ghost-btn" id="timeStartBtn">시뮬레이션 시작 ▶</button>
+      </div>
+      <div id="timeViz">
+        <div id="timeTunnel">
+          <div class="time-ring"></div>
+          <div class="time-ring"></div>
+          <div class="time-ring"></div>
+          <div id="timeCore"></div>
+        </div>
+      </div>
+      <div id="timeLog"></div>
+      <div id="timeResult"></div>
+      <div id="timeDisclaimer">※ 이 시뮬레이터는 실제 물리 장치가 아니며, 결과는 AI가 입력 내용을 바탕으로 최대한 정확하고 구체적으로 추론한 가상의 연출입니다.</div>
+    </div>
+  </div>
+
+  <!-- APP VIEW: 3D Holographic Core & 3D Spider-Man Hologram -->
+  <div id="appView">
+    <div id="orbPane" title="E.V 3D 홀로그래픽 코어">
+      <div class="core">
+        <div class="core-backdrop"></div>
+        <div class="core-projector"></div>
+        <div class="core-3d"><canvas id="coreCanvas" width="220" height="220"></canvas></div>
+      </div>
+      <div class="core-hologram-caption mono">E.V QUANTUM CORE &middot; ONLINE</div>
+    </div>
+
+    <div id="spiderHoloPane" title="클릭하여 슈트 진단 스캔 실행">
+      <div class="spider-holo-core">
+        <div class="spider-backdrop"></div>
+        <div class="spider-projector"></div>
+        <div class="spider-scanbeam"></div>
+        <div class="spider-3d"><canvas id="spiderCanvas" width="220" height="220"></canvas></div>
+      </div>
+      <div class="spider-holo-badge">
+        <span class="spider-badge-dot"></span>
+        <span class="spider-badge-title">SPIDER-MAN // SUIT SCAN</span>
+      </div>
+      <div class="spider-holo-status mono">PARKER TECH &middot; NANOTECH MESH ONLINE</div>
+    </div>
+  </div>
+
+  <!-- Chat: docked along bottom -->
+  <div id="chatDockWrap">
+    <div class="corner-frame" id="cornerFrame">
+      <div class="corner tl"></div><div class="corner tr"></div>
+      <div class="corner bl"></div><div class="corner br"></div>
+
+      <div id="dockHandle" title="드래그해서 채팅창 높이를 조절할 수 있습니다"></div>
+
+      <div id="hudReadouts" class="mono">
+        <span>NEURAL LINK: <b id="hudLink">STABLE</b></span>
+        <span>BIO SYNC: <b id="hudTemp">--</b></span>
+        <span>VOICE: <b id="hudVoice" style="color:var(--red);">EN</b></span>
+        <span>SUBTITLE: <b id="hudSub" style="color:var(--gold);">KO</b></span>
+        <span>UPTIME: <b id="hudUptime">00:00:00</b></span>
+        <span>ENGINE: <b id="hudEngine">GEMINI</b></span>
+        <span>MODE: <b id="hudMode">STANDBY</b></span>
+      </div>
+
+      <div id="chatLog"></div>
+
+      <div id="inputRow">
+        <button id="micBtn" title="Voice input">🎙</button>
+        <input id="textInput" type="text" placeholder="E.V에게 명령을 내리십시오..." autocomplete="off">
+        <button id="sendBtn">Send</button>
+        <button id="ttsBtn" title="Toggle voice reply">🔊</button>
+      </div>
+    </div>
+  </div>
+  <div id="footNote" class="mono">A.I. E.V // YOUR FRIENDLY NEIGHBORHOOD AI — POWERED BY GEMINI CORE</div>
+
+  <div id="root" style="display:none;"></div>
+  <script type="module" src="/src/main.tsx"></script>
+  <script type="module" src="/src/app.js"></script>
+</div>
+</body>
+</html>

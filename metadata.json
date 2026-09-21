@@ -1,0 +1,6 @@
+{
+  "name": "AI E.V",
+  "description": "Your friendly neighborhood AI assistant with a smooth 3D holographic core, 3D holographic Spider-Man logo, voice interaction, and Gemini integration.",
+  "requestFramePermissions": ["microphone"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
